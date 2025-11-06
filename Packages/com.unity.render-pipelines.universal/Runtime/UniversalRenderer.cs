@@ -938,7 +938,12 @@ namespace UnityEngine.Rendering.Universal
                 RenderTargetIdentifier targetId = BuiltinRenderTextureType.CameraTarget;
 #if ENABLE_VR && ENABLE_XR_MODULE
                 if (cameraData.xr.enabled)
+                {
+                    // Update the XR MSAA samples to 1 if there is an intermediate render texture
+                    XRSystem.SetDisplayMSAASamples(intermediateRenderTexture ? MSAASamples.None : (MSAASamples)cameraTargetDescriptor.msaaSamples);
                     targetId = cameraData.xr.renderTarget;
+                }
+
 #endif
 
                 if (m_TargetColorHandle == null)

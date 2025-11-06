@@ -46,6 +46,11 @@ namespace UnityEngine.Rendering.Universal
         public ShadowSplitData splitData;
 
         /// <summary>
+        /// Distance from the near to the far plane
+        /// </summary>
+        public float depthScale;
+
+        /// <summary>
         /// Clears and resets the data.
         /// </summary>
         public void Clear()
@@ -64,6 +69,9 @@ namespace UnityEngine.Rendering.Universal
     public static class ShadowUtils
     {
         internal static readonly bool m_ForceShadowPointSampling;
+
+        public delegate void ShadowAdjustmentDelegate(ref UniversalCameraData camera, ref ShadowSliceData sliceData, ref float shadowDistance);
+        public static ShadowAdjustmentDelegate ShadowAdjustment;
 
         static ShadowUtils()
         {
@@ -87,34 +95,15 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="viewMatrix">The view matrix to be set.</param>
         /// <param name="projMatrix">The projection matrix to be set.</param>
         /// <returns>True if the matrix was successfully extracted.</returns>
-        public static bool ExtractDirectionalLightMatrix(ref CullingResults cullResults, ref ShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData, out Matrix4x4 viewMatrix, out Matrix4x4 projMatrix)
+        public static bool ExtractDirectionalLightMatrix(ref UniversalCameraData cameraData, ref CullingResults cullResults, ref UniversalShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData, out Matrix4x4 viewMatrix, out Matrix4x4 projMatrix)
         {
-            bool result = ExtractDirectionalLightMatrix(ref cullResults, ref shadowData, shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution, shadowNearPlane, out cascadeSplitDistance, out shadowSliceData);
+            float shadowDistance = float.MaxValue;
+            bool result = ExtractDirectionalLightMatrix(ref cameraData, ref cullResults, ref shadowData, shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution, shadowNearPlane, out cascadeSplitDistance, out shadowSliceData, ref shadowDistance);
             viewMatrix = shadowSliceData.viewMatrix;
             projMatrix = shadowSliceData.projectionMatrix;
             return result;
         }
 
-        /// <summary>
-        /// Extracts the directional light matrix.
-        /// </summary>
-        /// <param name="cullResults">The results of a culling operation.</param>
-        /// <param name="shadowData">Data containing shadow settings.</param>
-        /// <param name="shadowLightIndex">The visible light index.</param>
-        /// <param name="cascadeIndex">The cascade index.</param>
-        /// <param name="shadowmapWidth">The shadow map width.</param>
-        /// <param name="shadowmapHeight">The shadow map height.</param>
-        /// <param name="shadowResolution">The shadow map resolution.</param>
-        /// <param name="shadowNearPlane">Near plane value to use for shadow frustums.</param>
-        /// <param name="cascadeSplitDistance">The culling sphere for the cascade.</param>
-        /// <param name="shadowSliceData">The struct container for shadow slice data.</param>
-        /// <returns>True if the matrix was successfully extracted.</returns>
-        public static bool ExtractDirectionalLightMatrix(ref CullingResults cullResults, ref ShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData)
-        {
-            return ExtractDirectionalLightMatrix(ref cullResults, shadowData.universalShadowData,
-                shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution,
-                shadowNearPlane, out cascadeSplitDistance, out shadowSliceData);
-        }
 
         /// <summary>
         /// Extracts the directional light matrix.
@@ -130,8 +119,7 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="cascadeSplitDistance">The culling sphere for the cascade.</param>
         /// <param name="shadowSliceData">The struct container for shadow slice data.</param>
         /// <returns>True if the matrix was successfully extracted.</returns>
-        public static bool ExtractDirectionalLightMatrix(ref CullingResults cullResults, UniversalShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData)
-        {
+        public static bool ExtractDirectionalLightMatrix(ref UniversalCameraData cameraData, ref CullingResults cullResults, ref UniversalShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData, ref float shadowDistance)     {
             bool success = cullResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(shadowLightIndex,
                 cascadeIndex, shadowData.mainLightShadowCascadesCount, shadowData.mainLightShadowCascadesSplit, shadowResolution, shadowNearPlane, out shadowSliceData.viewMatrix, out shadowSliceData.projectionMatrix,
                 out shadowSliceData.splitData);
@@ -140,7 +128,17 @@ namespace UnityEngine.Rendering.Universal
             shadowSliceData.offsetX = (cascadeIndex % 2) * shadowResolution;
             shadowSliceData.offsetY = (cascadeIndex / 2) * shadowResolution;
             shadowSliceData.resolution = shadowResolution;
+
+            // Meta change : Allow external code to adjust the shadow projection and distance
+            if (ShadowAdjustment != null)
+            {
+                shadowSliceData.shadowTransform = default;
+                shadowSliceData.depthScale = default;
+                ShadowAdjustment(ref cameraData, ref shadowSliceData, ref shadowDistance);
+            }
+
             shadowSliceData.shadowTransform = GetShadowTransform(shadowSliceData.projectionMatrix, shadowSliceData.viewMatrix);
+            shadowSliceData.depthScale = Mathf.Abs(2.0f / shadowSliceData.projectionMatrix[2, 2]);
 
             // It is the culling sphere radius multiplier for shadow cascade blending
             // If this is less than 1.0, then it will begin to cull castors across cascades
@@ -153,7 +151,6 @@ namespace UnityEngine.Rendering.Universal
 
             return success;
         }
-
         /// <summary>
         /// Extracts the spot light matrix.
         /// </summary>

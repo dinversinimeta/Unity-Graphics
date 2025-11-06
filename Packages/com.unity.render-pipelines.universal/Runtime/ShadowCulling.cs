@@ -71,10 +71,15 @@ namespace UnityEngine.Rendering.Universal
                     for (int i = 0; i < splitCount; ++i)
                     {
                         ShadowSliceData slice = default;
-                        bool isValid = ShadowUtils.ExtractDirectionalLightMatrix(ref cullingResults, shadowData,
-                            lightIndex, i, renderTargetWidth, renderTargetHeight, shadowResolution, visibleLight.light.shadowNearPlane,
+                        UniversalCameraData data = default;
+                        bool isValid = ShadowUtils.ExtractDirectionalLightMatrix(ref data, ref cullingResults,
+                            ref shadowData,
+                            lightIndex, i, renderTargetWidth, renderTargetHeight, shadowResolution,
+                            visibleLight.light.shadowNearPlane,
                             out _, // Vector4 cascadeSplitDistance. This is basically just the culling sphere which is already present in ShadowSplitData
-                            out slice);
+                            out slice,
+                            out _, // viewMatrix,
+                            out _); //projMatrix
 
                         if (isValid)
                             slicesValidMask |= 1u << i;

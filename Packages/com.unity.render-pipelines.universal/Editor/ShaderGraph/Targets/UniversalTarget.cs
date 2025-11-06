@@ -2028,6 +2028,16 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             stages = KeywordShaderStage.Fragment,
         };
 
+        public static readonly KeywordDescriptor ReflectionProbeAtlas = new KeywordDescriptor()
+        {
+            displayName = "Reflection Probe Atlas",
+            referenceName = "_REFLECTION_PROBE_ATLAS",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+            stages = KeywordShaderStage.Fragment,
+        };
+
         public static readonly KeywordDescriptor ShadowsSoft = new KeywordDescriptor()
         {
             displayName = "Soft Shadows",

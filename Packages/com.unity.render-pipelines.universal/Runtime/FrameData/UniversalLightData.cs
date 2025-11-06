@@ -50,6 +50,8 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         public bool reflectionProbeBlending;
 
+        public bool reflectionProbeAtlas;
+
         /// <summary>
         /// True if light layers are enabled.
         /// </summary>

@@ -249,7 +249,7 @@ half3 CalculateIrradianceFromReflectionProbes(half3 reflectVector, float3 positi
 {
     half3 irradiance = half3(0.0h, 0.0h, 0.0h);
     half mip = PerceptualRoughnessToMipmapLevel(perceptualRoughness);
-#if USE_FORWARD_PLUS
+#if USE_FORWARD_PLUS && defined(_REFLECTION_PROBE_ATLAS)
     float totalWeight = 0.0f;
     uint probeIndex;
     ClusterIterator it = ClusterInit(normalizedScreenSpaceUV, positionWS, 1);

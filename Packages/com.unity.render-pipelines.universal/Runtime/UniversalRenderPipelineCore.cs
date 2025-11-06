@@ -218,6 +218,11 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         public ref bool reflectionProbeBlending => ref frameData.Get<UniversalLightData>().reflectionProbeBlending;
 
+
+        /// <summary>
+        /// True if blending is enabled for reflection atlas.
+        /// </summary>
+        public ref bool reflectionProbeAtlas => ref frameData.Get<UniversalLightData>().reflectionProbeAtlas;
         /// <summary>
         /// True if light layers are enabled.
         /// </summary>
@@ -948,6 +953,7 @@ namespace UnityEngine.Rendering.Universal
         public static GlobalKeyword ForwardPlus;
         public static GlobalKeyword AdditionalLightShadows;
         public static GlobalKeyword ReflectionProbeBoxProjection;
+        public static GlobalKeyword ReflectionProbeAtlas;
         public static GlobalKeyword ReflectionProbeBlending;
         public static GlobalKeyword SoftShadows;
         public static GlobalKeyword SoftShadowsLow;
@@ -1161,6 +1167,9 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary> Keyword used for Reflection probe blending. </summary>
         public const string ReflectionProbeBlending = "_REFLECTION_PROBE_BLENDING";
+
+        /// <summary> Keyword used for Reflection probe atlas. </summary>
+        public const string ReflectionProbeAtlas = "_REFLECTION_PROBE_ATLAS";
 
         /// <summary> Keyword used for soft shadows. </summary>
         public const string SoftShadows = "_SHADOWS_SOFT";
