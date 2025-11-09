@@ -1064,9 +1064,11 @@ namespace UnityEngine.Rendering.Universal
             ShaderGlobalKeywords.AdditionalLightShadows = GlobalKeyword.Create(ShaderKeywordStrings.AdditionalLightShadows);
             ShaderGlobalKeywords.ReflectionProbeBoxProjection = GlobalKeyword.Create(ShaderKeywordStrings.ReflectionProbeBoxProjection);
             ShaderGlobalKeywords.ReflectionProbeBlending = GlobalKeyword.Create(ShaderKeywordStrings.ReflectionProbeBlending);
+            ShaderGlobalKeywords.ReflectionProbeAtlas = GlobalKeyword.Create(ShaderKeywordStrings.ReflectionProbeAtlas);
             ShaderGlobalKeywords.SoftShadows = GlobalKeyword.Create(ShaderKeywordStrings.SoftShadows);
             ShaderGlobalKeywords.SoftShadowsLow = GlobalKeyword.Create(ShaderKeywordStrings.SoftShadowsLow);
             ShaderGlobalKeywords.SoftShadowsMedium = GlobalKeyword.Create(ShaderKeywordStrings.SoftShadowsMedium);
+            ShaderGlobalKeywords.SoftShadowsHigh = GlobalKeyword.Create(ShaderKeywordStrings.SoftShadowsHigh);
             ShaderGlobalKeywords.MixedLightingSubtractive = GlobalKeyword.Create(ShaderKeywordStrings.MixedLightingSubtractive);
             ShaderGlobalKeywords.LightmapShadowMixing = GlobalKeyword.Create(ShaderKeywordStrings.LightmapShadowMixing);
             ShaderGlobalKeywords.ShadowsShadowMask = GlobalKeyword.Create(ShaderKeywordStrings.ShadowsShadowMask);
