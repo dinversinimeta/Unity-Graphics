@@ -27,15 +27,22 @@ Shader "Hidden/Universal Render Pipeline/XR/XROcclusionMesh"
         {
             float4 vertex : SV_POSITION;
 
-        #if USE_XR_OCCLUSION_MESH_COMBINED_RT_ARRAY_INDEX
+        #if USE_XR_COMBINED_MESH_RT_ARRAY_INDEX
             uint rtArrayIndex : SV_RenderTargetArrayIndex;
         #endif
         };
 
         Varyings Vert(Attributes input)
         {
+            UNITY_SETUP_INSTANCE_ID(input);
+
+                float yFlip = -1.0f;
+            #if defined(STEREO_MULTIVIEW_ON)
+                // for mobile multiview disable yflip
+                yFlip = 1.0f;
+            #endif
             Varyings output;
-            output.vertex = mul(UNITY_MATRIX_M, float4(input.vertex.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f), UNITY_NEAR_CLIP_VALUE, 1.0f));
+            output.vertex = float4(input.vertex.xy * float2(2.0f, 2.0f * yFlip) + float2(-1.0f, -1.0f * yFlip), UNITY_NEAR_CLIP_VALUE, 1.0f);
 
         #if USE_XR_OCCLUSION_MESH_COMBINED_MULTIVIEW
             if (unity_StereoEyeIndex != uint(input.vertex.z))

@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Rendering
                     if (m_Pass.singlePassEnabled)
                     {
                         // Prefer multiview draw
-                        if (m_CombinedMesh != null && SystemInfo.supportsMultiview) 
+                        if (m_CombinedMesh != null && SystemInfo.supportsMultiview)
                         {
                             // For the multiview code path, keep the multiview state on to propagate geometries to all eye texture slices
                             cmd.EnableShaderKeyword("XR_OCCLUSION_MESH_COMBINED");
