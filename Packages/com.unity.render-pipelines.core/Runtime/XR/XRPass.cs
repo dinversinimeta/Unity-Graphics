@@ -12,6 +12,7 @@ namespace UnityEngine.Experimental.Rendering
     {
         internal RenderTargetIdentifier renderTarget;
         internal RenderTextureDescriptor renderTargetDesc;
+        internal bool motionVectorRenderTargetValid;
         internal RenderTargetIdentifier motionVectorRenderTarget;
         internal RenderTextureDescriptor motionVectorRenderTargetDesc;
         internal ScriptableCullingParameters cullingParameters;
@@ -135,6 +136,12 @@ namespace UnityEngine.Experimental.Rendering
         /// Destination render target descriptor.
         /// </summary>
         public RenderTextureDescriptor renderTargetDesc { get; private set; }
+
+
+        /// <summary>
+        //  Check if render target is valid
+        /// <summary>
+        public bool motionVectorRenderTargetValid { get; private set; }
 
         /// <summary>
         ///  Destination render target for motion vectors
@@ -469,12 +476,14 @@ namespace UnityEngine.Experimental.Rendering
             AssignCullingParams(createInfo.cullingPassId, createInfo.cullingParameters);
             renderTarget = new RenderTargetIdentifier(createInfo.renderTarget, 0, CubemapFace.Unknown, -1);
             renderTargetDesc = createInfo.renderTargetDesc;
+            motionVectorRenderTargetValid = createInfo.motionVectorRenderTargetValid;
             motionVectorRenderTarget = new RenderTargetIdentifier(createInfo.motionVectorRenderTarget, 0, CubemapFace.Unknown, -1);
             motionVectorRenderTargetDesc = createInfo.motionVectorRenderTargetDesc;
             hasMotionVectorPass = createInfo.hasMotionVectorPass;
             m_OcclusionMesh.SetMaterial(createInfo.occlusionMeshMaterial);
             occlusionMeshScale = createInfo.occlusionMeshScale;
             foveatedRenderingInfo = createInfo.foveatedRenderingInfo;
+            hasMotionVectorPass = createInfo.motionVectorRenderTargetValid;
         }
 
         internal void AddView(XRView xrView)

@@ -86,11 +86,7 @@ namespace UnityEngine.Rendering.Universal
             [Reload("Shaders/CameraMotionVectors.shader")]
             public Shader cameraMotionVector;
 
-            /// <summary>
-            /// Object motion vectors shader.
-            /// </summary>
-            [Reload("Shaders/ObjectMotionVectors.shader")]
-            public Shader objectMotionVector;
+
         }
 
         /// <summary>

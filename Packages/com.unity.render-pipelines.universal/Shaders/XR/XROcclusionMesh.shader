@@ -4,9 +4,12 @@ Shader "Hidden/Universal Render Pipeline/XR/XROcclusionMesh"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
         #pragma multi_compile _ XR_OCCLUSION_MESH_COMBINED
+        #pragma multi_compile_instancing
 
         // Not all platforms properly support SV_RenderTargetArrayIndex
-        #if defined(SHADER_API_D3D11) || defined(SHADER_API_VULKAN) || defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_PSSL)
+        #if defined(STEREO_MULTIVIEW_ON)
+            #define USE_XR_COMBINED_MESH_MULTIVIEW XR_OCCLUSION_MESH_COMBINED
+        #elif defined(SHADER_API_D3D11) || defined(SHADER_API_VULKAN) || defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_PSSL)
             #if defined (UNITY_STEREO_MULTIVIEW_ENABLED)
                 #define USE_XR_OCCLUSION_MESH_COMBINED_MULTIVIEW XR_OCCLUSION_MESH_COMBINED
             #else
@@ -17,6 +20,7 @@ Shader "Hidden/Universal Render Pipeline/XR/XROcclusionMesh"
         struct Attributes
         {
             float4 vertex : POSITION;
+            UNITY_VERTEX_INPUT_INSTANCE_ID
         };
 
         struct Varyings

@@ -47,6 +47,12 @@ namespace UnityEngine.Experimental.Rendering
         /// </summary>
         static public readonly int unity_StereoMatrixInvVP = Shader.PropertyToID("unity_StereoMatrixInvVP");
 
+
+        /// <summary>
+        /// Cached unique id for unity_StereoMatrixPrevVP
+        /// </summary>
+        static public readonly int unity_StereoMatrixPrevVP = Shader.PropertyToID("unity_StereoMatrixPrevVP");
+
         /// <summary>
         /// Cached unique id for unity_StereoWorldSpaceCameraPos
         /// </summary>
@@ -61,6 +67,8 @@ namespace UnityEngine.Experimental.Rendering
         static Matrix4x4[] s_invProjMatrix = new Matrix4x4[2];
         static Matrix4x4[] s_viewProjMatrix = new Matrix4x4[2];
         static Matrix4x4[] s_invViewProjMatrix = new Matrix4x4[2];
+        static Matrix4x4[] s_mvViewProjMatrix = new Matrix4x4[2];
+        static Matrix4x4[] s_prevMVViewProjMatrix = new Matrix4x4[2];
         static Vector4[] s_worldSpaceCameraPos = new Vector4[2];
 
         /// <summary>
@@ -70,7 +78,7 @@ namespace UnityEngine.Experimental.Rendering
         /// <param name="projMatrix"> The new projection matrix that XR shaders constant should update to use. </param>
         /// <param name="renderIntoTexture"> Determines the yflip state for the projection matrix. </param>
         /// <param name="viewIndex"> Index of the XR shader constant to update. </param>
-        public static void UpdateBuiltinShaderConstants(Matrix4x4 viewMatrix, Matrix4x4 projMatrix, bool renderIntoTexture, int viewIndex)
+        public static void UpdateBuiltinShaderConstants(Matrix4x4 viewMatrix, Matrix4x4 projMatrix, bool renderIntoTexture, int viewIndex, bool prevViewValid, Matrix4x4 prevViewMatrix, bool isOculusMotionVec = false)
         {
 #if ENABLE_VR && ENABLE_XR_MODULE
             var gpuProjMatrix = GL.GetGPUProjectionMatrix(projMatrix, renderIntoTexture);
@@ -85,6 +93,17 @@ namespace UnityEngine.Experimental.Rendering
             s_invProjMatrix[viewIndex] = Matrix4x4.Inverse(gpuProjMatrix);
             s_invViewProjMatrix[viewIndex] = Matrix4x4.Inverse(gpuViewProjMatrix);
             s_worldSpaceCameraPos[viewIndex] = s_invViewMatrix[viewIndex].GetColumn(3);
+
+            if (isOculusMotionVec)
+            {
+                s_prevMVViewProjMatrix[viewIndex] = s_mvViewProjMatrix[viewIndex];
+                s_mvViewProjMatrix[viewIndex] = s_viewProjMatrix[viewIndex];
+            }
+
+            if (prevViewValid)
+            {
+                s_prevMVViewProjMatrix[viewIndex] = s_projMatrix[viewIndex] * prevViewMatrix;
+            }
 #endif
         }
 
@@ -93,7 +112,7 @@ namespace UnityEngine.Experimental.Rendering
         /// This is required to maintain compatibility with legacy code and shaders.
         /// </summary>
         /// <param name="cmd"> Commandbuffer on which to set XR shader constants. </param>
-        public static void SetBuiltinShaderConstants(CommandBuffer cmd)
+        public static void SetBuiltinShaderConstants(CommandBuffer cmd, bool isOculusMotionVec = false)
         {
 #if ENABLE_VR && ENABLE_XR_MODULE
             cmd.SetGlobalMatrixArray(unity_StereoCameraProjection, s_cameraProjMatrix);
@@ -105,6 +124,10 @@ namespace UnityEngine.Experimental.Rendering
             cmd.SetGlobalMatrixArray(unity_StereoMatrixVP, s_viewProjMatrix);
             cmd.SetGlobalMatrixArray(unity_StereoMatrixInvVP, s_invViewProjMatrix);
             cmd.SetGlobalVectorArray(unity_StereoWorldSpaceCameraPos, s_worldSpaceCameraPos);
+            if (isOculusMotionVec)
+            {
+                cmd.SetGlobalMatrixArray(unity_StereoMatrixPrevVP, s_prevMVViewProjMatrix);
+            }
 #endif
         }
 
@@ -113,9 +136,9 @@ namespace UnityEngine.Experimental.Rendering
         /// This is required to maintain compatibility with legacy code and shaders.
         /// </summary>
         /// <param name="cmd"> RasterCommandbuffer on which to set XR shader constants. </param>
-        public static void SetBuiltinShaderConstants(RasterCommandBuffer cmd)
+        public static void SetBuiltinShaderConstants(RasterCommandBuffer cmd, bool isOculusMotionVec = false)
         {
-            SetBuiltinShaderConstants(cmd.m_WrappedCommandBuffer);
+            SetBuiltinShaderConstants(cmd.m_WrappedCommandBuffer, isOculusMotionVec);
         }
 
         /// <summary>

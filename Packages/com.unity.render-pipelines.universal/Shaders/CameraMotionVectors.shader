@@ -96,9 +96,9 @@ Shader "Hidden/Universal Render Pipeline/CameraMotionVectors"
                     float2 prevPosUV = RemapFoveatedRenderingPrevFrameLinearToNonUniform(prevPosNDC * 0.5f + 0.5f);
 
                     // Calculate forward velocity
-                    velocity = (posUV - prevPosUV);
+                    velocity = (posUV - prevPosUV) * 2;
                     #if UNITY_UV_STARTS_AT_TOP
-                        velocity.y = -velocity.y;
+                        //velocity.y = -velocity.y;
                     #endif
                 }
                 else
@@ -109,13 +109,13 @@ Shader "Hidden/Universal Render Pipeline/CameraMotionVectors"
 
                     // TODO: test that velocity.y is correct
                     #if UNITY_UV_STARTS_AT_TOP
-                        velocity.y = -velocity.y;
+                        //velocity.y = -velocity.y;
                     #endif
 
                     // Convert velocity from NDC space (-1..1) to screen UV 0..1 space
                     // Note: It doesn't mean we don't have negative values, we store negative or positive offset in the UV space.
                     // Note: ((posNDC * 0.5 + 0.5) - (prevPosNDC * 0.5 + 0.5)) = (velocity * 0.5)
-                    velocity.xy *= 0.5;
+                    //velocity.xy *= 0.5;
                 }
 
                 return float4(velocity, 0, 0);

@@ -451,7 +451,10 @@ namespace UnityEngine.Experimental.Rendering
             // XRTODO : remove this line and use XRSettings.useOcclusionMesh instead when it's fixed
             Mesh occlusionMesh = XRGraphicsAutomatedTests.running ? null : renderParameter.occlusionMesh;
 
-            return new XRView(renderParameter.projection, renderParameter.view, renderParameter.previousView, renderParameter.isPreviousViewValid, viewport, occlusionMesh, renderParameter.textureArraySlice);
+            bool prevViewValid = renderParameter.isPreviousViewValid;
+
+            Matrix4x4 prevViewMatrix = (prevViewValid) ? renderParameter.previousView : Matrix4x4.identity;
+            return new XRView(renderParameter.projection, renderParameter.view, prevViewMatrix, prevViewValid, viewport, occlusionMesh, renderParameter.textureArraySlice);
         }
 
         private static RenderTextureDescriptor XrRenderTextureDescToUnityRenderTextureDesc(RenderTextureDescriptor xrDesc)
@@ -467,7 +470,7 @@ namespace UnityEngine.Experimental.Rendering
         }
 
         static XRPassCreateInfo BuildPass(XRDisplaySubsystem.XRRenderPass xrRenderPass, ScriptableCullingParameters cullingParameters, XRLayout layout)
-        {    
+        {
             XRPassCreateInfo passInfo = new XRPassCreateInfo
             {
                 renderTarget            = xrRenderPass.renderTarget,

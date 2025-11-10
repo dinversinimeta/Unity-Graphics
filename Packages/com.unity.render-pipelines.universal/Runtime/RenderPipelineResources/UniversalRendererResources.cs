@@ -43,6 +43,19 @@ namespace UnityEngine.Rendering.Universal
         }
 
         [SerializeField]
+        [ResourcePath("Shaders/OculusCameraMotionVectors.shader")]
+        private Shader m_ObjectMotionVector;
+
+        /// <summary>
+        /// Object Motion Vectors shader.
+        /// </summary>
+        public Shader objectMotionVector
+        {
+            get => m_ObjectMotionVector;
+            set => this.SetValueAndNotify(ref m_ObjectMotionVector, value, nameof(m_ObjectMotionVector));
+        }
+
+        [SerializeField]
         [ResourcePath("Shaders/Utils/StencilDeferred.shader")]
         private Shader m_StencilDeferredPS;
 

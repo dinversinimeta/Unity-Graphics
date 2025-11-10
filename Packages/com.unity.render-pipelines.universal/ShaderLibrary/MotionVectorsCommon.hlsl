@@ -34,24 +34,24 @@ float2 CalcNdcMotionVectorFromCsPositions(float4 posCS, float4 prevPosCS)
         float2 prevPosUV = RemapFoveatedRenderingPrevFrameLinearToNonUniform(prevPosNDC * 0.5 + 0.5);
 
         // Calculate forward velocity
-        velocity = (posUV - prevPosUV);
+        velocity = (posUV - prevPosUV) * 2;
         #if UNITY_UV_STARTS_AT_TOP
-        velocity.y = -velocity.y;
+        //velocity.y = -velocity.y;
         #endif
     }
     else
     #endif
     {
         // Calculate forward velocity
-        velocity = (posNDC.xy - prevPosNDC.xy);
+        velocity = (posNDC.xy - prevPosNDC.xy) * 2;
         #if UNITY_UV_STARTS_AT_TOP
-        velocity.y = -velocity.y;
+        //velocity.y = -velocity.y;
         #endif
 
         // Convert velocity from NDC space (-1..1) to UV 0..1 space
         // Note: It doesn't mean we don't have negative values, we store negative or positive offset in UV space.
         // Note: ((posNDC * 0.5 + 0.5) - (prevPosNDC * 0.5 + 0.5)) = (velocity * 0.5)
-        velocity.xy *= 0.5;
+        //velocity.xy *= 0.5;
     }
 
     return velocity;
