@@ -68,13 +68,22 @@ namespace UnityEngine.Rendering.Universal
                     slices = new NativeArray<ShadowSliceData>(splitCount, Allocator.Temp);
                     slicesValidMask = 0;
 
+                    // Meta change : Pass in the camera data and allow shadow projection and distance to be modified externally per cascade
+                    float maxShadowDistance = 0f;
+
                     for (int i = 0; i < splitCount; ++i)
                     {
+                        float cascadeShadowDistance  = float.MaxValue;
                         ShadowSliceData slice = default;
-                        bool isValid = ShadowUtils.ExtractDirectionalLightMatrix(ref cullingResults, shadowData,
+                        UniversalCameraData data = default;
+
+                        bool isValid = ShadowUtils.ExtractDirectionalLightMatrix(ref data, ref cullingResults, shadowData,
                             lightIndex, i, renderTargetWidth, renderTargetHeight, shadowResolution, visibleLight.light.shadowNearPlane,
                             out _, // Vector4 cascadeSplitDistance. This is basically just the culling sphere which is already present in ShadowSplitData
-                            out slice);
+                            out slice,
+                            ref cascadeShadowDistance);
+
+                        maxShadowDistance = Mathf.Max(maxShadowDistance, cascadeShadowDistance);
 
                         if (isValid)
                             slicesValidMask |= 1u << i;

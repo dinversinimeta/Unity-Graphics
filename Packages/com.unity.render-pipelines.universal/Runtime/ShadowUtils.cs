@@ -87,7 +87,6 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="viewMatrix">The view matrix to be set.</param>
         /// <param name="projMatrix">The projection matrix to be set.</param>
         /// <returns>True if the matrix was successfully extracted.</returns>
-        public static bool ExtractDirectionalLightMatrix(ref CullingResults cullResults, ref ShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData, out Matrix4x4 viewMatrix, out Matrix4x4 projMatrix)
         {
             bool result = ExtractDirectionalLightMatrix(ref cullResults, ref shadowData, shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution, shadowNearPlane, out cascadeSplitDistance, out shadowSliceData);
             viewMatrix = shadowSliceData.viewMatrix;
