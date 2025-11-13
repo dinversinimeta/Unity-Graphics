@@ -373,6 +373,8 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
                 result.passes.Add(PassVariant(CorePasses.ScenePicking(target), CorePragmas.Default));
                 result.passes.Add(PassVariant(LitPasses._2D(target), CorePragmas.Default));
 
+                result.passes.Add(PassVariant(CorePasses.OculusMotionVectors(target), CorePragmas.Default));
+
                 return result;
             }
         }

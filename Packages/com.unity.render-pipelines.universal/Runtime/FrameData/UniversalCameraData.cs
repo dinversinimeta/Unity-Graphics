@@ -34,7 +34,7 @@ namespace UnityEngine.Rendering.Universal
         private bool m_InitBuiltinXRConstants;
 #endif
         // Helper function to populate builtin stereo matricies as well as URP stereo matricies
-        internal void PushBuiltinShaderConstantsXR(RasterCommandBuffer cmd, bool renderIntoTexture)
+        internal void PushBuiltinShaderConstantsXR(RasterCommandBuffer cmd, bool renderIntoTexture, bool isOculusMotionVec = false)
         {
 #if ENABLE_VR && ENABLE_XR_MODULE
             // Multipass always needs update to prevent wrong view projection matrix set by other passes
@@ -48,8 +48,8 @@ namespace UnityEngine.Rendering.Universal
                 {
                     var projection1 = GetProjectionMatrix(1);
                     var view1 = GetViewMatrix(1);
-                    XRBuiltinShaderConstants.UpdateBuiltinShaderConstants(view0, projection0, renderIntoTexture, 0);
-                    XRBuiltinShaderConstants.UpdateBuiltinShaderConstants(view1, projection1, renderIntoTexture, 1);
+                    XRBuiltinShaderConstants.UpdateBuiltinShaderConstants(view0, projection0, renderIntoTexture, 0,false, Matrix4x4.identity, isOculusMotionVec);
+                    XRBuiltinShaderConstants.UpdateBuiltinShaderConstants(view1, projection1, renderIntoTexture, 1,false, Matrix4x4.identity, isOculusMotionVec);
                     XRBuiltinShaderConstants.SetBuiltinShaderConstants(cmd);
                 }
                 else

@@ -1175,6 +1175,42 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             return result;
         }
 
+        public static PassDescriptor OculusMotionVectors(UniversalTarget target)
+        {
+            var result = new PassDescriptor()
+            {
+                // Definition
+                //dinversini check me
+                displayName = "MotionVectors",
+                referenceName = "SHADERPASS_OCULUS_MOTIONVECTORS",
+                //dinversini check me
+                lightMode = "MotionVectors",
+
+                // Template
+                passTemplatePath = GenerationUtils.GetDefaultTemplatePath("PassMesh.template"),
+                sharedTemplateDirectories = GenerationUtils.GetDefaultSharedTemplateDirectories(),
+
+                // Port Mask
+                validVertexBlocks = CoreBlockMasks.Vertex,
+
+                // Fields
+                structs = CoreStructCollections.Default,
+                requiredFields = CoreRequiredFields.OculusMotionVectors,
+                fieldDependencies = CoreFieldDependencies.Default,
+
+                // Conditional State
+                renderStates = CoreRenderStates.Default,
+                pragmas = CorePragmas.Instanced,
+                includes = CoreIncludes.OculusMotionVectors,
+                defines = new DefineCollection(),
+                keywords = new KeywordCollection(),
+            };
+
+            AddAlphaClipControlToPass(ref result, target);
+
+            return result;
+        }
+
         public static PassDescriptor SceneSelection(UniversalTarget target)
         {
             var result = new PassDescriptor()
@@ -1402,6 +1438,13 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
             StructFields.Attributes.uv1,                            // needed for meta vertex position
             StructFields.Varyings.normalWS,
             StructFields.Varyings.tangentWS,                        // needed for vertex lighting
+        };
+
+          public static readonly FieldCollection OculusMotionVectors = new FieldCollection()
+        {
+            StructFields.Attributes.uv4,                   // needed for previousPositionOS
+            UniversalStructFields.Varyings.curPositionCS,
+            UniversalStructFields.Varyings.prevPositionCS,
         };
     }
     #endregion
@@ -1692,6 +1735,7 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         const string kDOTS = "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl";
         const string kRenderingLayers = "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl";
         const string kProbeVolumes = "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ProbeVolumeVariants.hlsl";
+        const string kMotionVectors = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/OculusMotionVectors.hlsl";
 
         public static readonly IncludeCollection CorePregraph = new IncludeCollection
         {
@@ -1814,6 +1858,17 @@ namespace UnityEditor.Rendering.Universal.ShaderGraph
         public static readonly IncludeCollection LODCrossFade = new IncludeCollection
         {
             { kLODCrossFade, IncludeLocation.Pregraph }
+        };
+
+         public static readonly IncludeCollection OculusMotionVectors = new IncludeCollection
+        {
+            // Pre-graph
+            { CorePregraph },
+            { ShaderGraphPregraph },
+
+            // Post-graph
+            { CorePostgraph },
+            { kMotionVectors, IncludeLocation.Postgraph },
         };
     }
     #endregion

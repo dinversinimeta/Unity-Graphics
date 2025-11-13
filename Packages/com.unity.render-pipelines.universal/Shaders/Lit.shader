@@ -490,6 +490,24 @@ Shader "Universal Render Pipeline/Lit"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ObjectMotionVectors.hlsl"
             ENDHLSL
         }
+        Pass
+        {
+            Name "OculusMotionVectors"
+            Tags{ "LightMode" = "MotionVectors"}
+            Tags { "RenderType" = "Opaque" }
+
+            ZWrite[_ZWrite]
+            Cull[_Cull]
+            ZTest LEqual
+
+            HLSLPROGRAM
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/OculusMotionVectorCore.hlsl"
+
+            #pragma vertex vert
+            #pragma fragment frag
+
+            ENDHLSL
+        }
     }
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"

@@ -1885,10 +1885,13 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_XR_MODULE
                         if (cameraData.xr.enabled)
                         {
+                             bool isOculusMotionVec = renderPass is Internal.OculusMotionVectorPass;
+
                             // SetRenderTarget might alter the internal device state(winding order).
                             // Non-stereo buffer is already updated internally when switching render target. We update stereo buffers here to keep the consistency.
-                            bool renderIntoTexture = !RenderingUtils.ContainsXRTarget(renderPass.colorAttachmentHandles, cameraData.xr);
-                            cameraData.PushBuiltinShaderConstantsXR(CommandBufferHelpers.GetRasterCommandBuffer(cmd), renderIntoTexture);
+
+                            bool renderIntoTexture = renderPass.colorAttachmentHandle.nameID != cameraData.xr.renderTarget && !isOculusMotionVec; // Prevent Unity from flipping the v coord of the texture.
+                            cameraData.PushBuiltinShaderConstantsXR(CommandBufferHelpers.GetRasterCommandBuffer(cmd), renderIntoTexture, isOculusMotionVec);
                             XRSystemUniversal.MarkShaderProperties(CommandBufferHelpers.GetRasterCommandBuffer(cmd), cameraData.xrUniversal, renderIntoTexture);
                         }
 #endif

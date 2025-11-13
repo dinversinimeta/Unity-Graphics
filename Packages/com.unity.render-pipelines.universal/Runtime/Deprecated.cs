@@ -595,8 +595,15 @@ namespace UnityEngine.Rendering.Universal
         [Reload("Shaders/PostProcessing/LensFlareDataDriven.shader")]
         [Obsolete("Moved to UniversalRenderPipelineRuntimeShaders on GraphicsSettings. #from(2023.3)", false)]
         public Shader dataDrivenLensFlare;
+
+        /// <summary>
+        /// Oculus Camera Motion Vectors shader.
+        /// </summary>
+        [Reload("Shaders/OculusCameraMotionVectors.shader")]
+        [Obsolete("Moved to UniversalRenderPipelineRuntimeShaders on GraphicsSettings. #from(2023.3)", false)]
+        public Shader oculusCameraMotionVector;
     }
-  
+
     partial class UniversalRenderPipelineGlobalSettings
     {
 #pragma warning disable 0414
