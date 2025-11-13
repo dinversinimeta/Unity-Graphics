@@ -46,6 +46,11 @@ namespace UnityEngine.Rendering.Universal
         public ShadowSplitData splitData;
 
         /// <summary>
+        /// Distance from the near to the far plane
+        /// </summary>
+        public float depthScale;
+
+        /// <summary>
         /// Clears and resets the data.
         /// </summary>
         public void Clear()
@@ -64,6 +69,10 @@ namespace UnityEngine.Rendering.Universal
     public static class ShadowUtils
     {
         internal static readonly bool m_ForceShadowPointSampling;
+
+        // Meta change : Entrypoint for adjusting the shadow projection and distance
+        public delegate void ShadowAdjustmentDelegate(ref UniversalCameraData camera, ref ShadowSliceData sliceData, ref float shadowDistance);
+        public static ShadowAdjustmentDelegate ShadowAdjustment;
 
         static ShadowUtils()
         {
@@ -87,8 +96,9 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="viewMatrix">The view matrix to be set.</param>
         /// <param name="projMatrix">The projection matrix to be set.</param>
         /// <returns>True if the matrix was successfully extracted.</returns>
+        public static bool ExtractDirectionalLightMatrix(ref UniversalCameraData cameraData, ref CullingResults cullResults, ref ShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData, out Matrix4x4 viewMatrix, out Matrix4x4 projMatrix)
         {
-            bool result = ExtractDirectionalLightMatrix(ref cullResults, ref shadowData, shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution, shadowNearPlane, out cascadeSplitDistance, out shadowSliceData);
+            bool result = ExtractDirectionalLightMatrix(ref cameraData, ref cullResults, ref shadowData, shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution, shadowNearPlane, out cascadeSplitDistance, out shadowSliceData);
             viewMatrix = shadowSliceData.viewMatrix;
             projMatrix = shadowSliceData.projectionMatrix;
             return result;
@@ -108,11 +118,12 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="cascadeSplitDistance">The culling sphere for the cascade.</param>
         /// <param name="shadowSliceData">The struct container for shadow slice data.</param>
         /// <returns>True if the matrix was successfully extracted.</returns>
-        public static bool ExtractDirectionalLightMatrix(ref CullingResults cullResults, ref ShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData)
+        public static bool ExtractDirectionalLightMatrix(ref UniversalCameraData cameraData, ref CullingResults cullResults, ref ShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData)
         {
-            return ExtractDirectionalLightMatrix(ref cullResults, shadowData.universalShadowData,
+            float shadowDistance = float.MaxValue;
+            return ExtractDirectionalLightMatrix(ref cameraData, ref cullResults, shadowData.universalShadowData,
                 shadowLightIndex, cascadeIndex, shadowmapWidth, shadowmapHeight, shadowResolution,
-                shadowNearPlane, out cascadeSplitDistance, out shadowSliceData);
+                shadowNearPlane, out cascadeSplitDistance, out shadowSliceData, ref shadowDistance);
         }
 
         /// <summary>
@@ -129,7 +140,7 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="cascadeSplitDistance">The culling sphere for the cascade.</param>
         /// <param name="shadowSliceData">The struct container for shadow slice data.</param>
         /// <returns>True if the matrix was successfully extracted.</returns>
-        public static bool ExtractDirectionalLightMatrix(ref CullingResults cullResults, UniversalShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData)
+        public static bool ExtractDirectionalLightMatrix(ref UniversalCameraData cameraData, ref CullingResults cullResults, UniversalShadowData shadowData, int shadowLightIndex, int cascadeIndex, int shadowmapWidth, int shadowmapHeight, int shadowResolution, float shadowNearPlane, out Vector4 cascadeSplitDistance, out ShadowSliceData shadowSliceData, ref float shadowDistance)
         {
             bool success = cullResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(shadowLightIndex,
                 cascadeIndex, shadowData.mainLightShadowCascadesCount, shadowData.mainLightShadowCascadesSplit, shadowResolution, shadowNearPlane, out shadowSliceData.viewMatrix, out shadowSliceData.projectionMatrix,
@@ -139,7 +150,17 @@ namespace UnityEngine.Rendering.Universal
             shadowSliceData.offsetX = (cascadeIndex % 2) * shadowResolution;
             shadowSliceData.offsetY = (cascadeIndex / 2) * shadowResolution;
             shadowSliceData.resolution = shadowResolution;
+
+            // Meta change : Allow external code to adjust the shadow projection and distance
+            if (ShadowAdjustment != null)
+            {
+                shadowSliceData.shadowTransform = default;
+                shadowSliceData.depthScale = default;
+                ShadowAdjustment(ref cameraData, ref shadowSliceData, ref shadowDistance);
+            }
+
             shadowSliceData.shadowTransform = GetShadowTransform(shadowSliceData.projectionMatrix, shadowSliceData.viewMatrix);
+            shadowSliceData.depthScale = Mathf.Abs(2.0f / shadowSliceData.projectionMatrix[2, 2]);
 
             // It is the culling sphere radius multiplier for shadow cascade blending
             // If this is less than 1.0, then it will begin to cull castors across cascades
