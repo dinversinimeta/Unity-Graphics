@@ -42,6 +42,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         Matrix4x4[] m_MainLightShadowMatrices;
         ShadowSliceData[] m_CascadeSlices;
         Vector4[] m_CascadeSplitDistances;
+        float[] m_MainLightShadowDepthScales;
 
         private RenderTextureDescriptor m_MainLightShadowDescriptor;
 
@@ -67,6 +68,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_MainLightShadowMatrices = new Matrix4x4[k_MaxCascades + 1];
             m_CascadeSlices = new ShadowSliceData[k_MaxCascades];
             m_CascadeSplitDistances = new Vector4[k_MaxCascades];
+            m_MainLightShadowDepthScales = new float[k_MaxCascades];
 
             MainLightShadowConstantBuffer._WorldToShadow = Shader.PropertyToID("_MainLightWorldToShadow");
             MainLightShadowConstantBuffer._ShadowParams = Shader.PropertyToID("_MainLightShadowParams");
@@ -151,13 +153,24 @@ namespace UnityEngine.Rendering.Universal.Internal
                 return SetupForEmptyRendering(cameraData.renderer.stripShadowsOffVariants);
 
             m_ShadowCasterCascadesCount = shadowData.mainLightShadowCascadesCount;
+            int shadowResolution = ShadowUtils.GetMaxTileResolutionInAtlas(shadowData.mainLightShadowmapWidth,
+                shadowData.mainLightShadowmapHeight, m_ShadowCasterCascadesCount);
             renderTargetWidth = shadowData.mainLightRenderTargetWidth;
             renderTargetHeight = shadowData.mainLightRenderTargetHeight;
 
             ref readonly URPLightShadowCullingInfos shadowCullingInfos = ref shadowData.visibleLightsShadowCullingInfos.UnsafeElementAt(shadowLightIndex);
 
+            float maxShadowDistance = 0f;
+
             for (int cascadeIndex = 0; cascadeIndex < m_ShadowCasterCascadesCount; ++cascadeIndex)
             {
+                float cascadeShadowDistance = cameraData.maxShadowDistance;
+
+                bool success = ShadowUtils.ExtractDirectionalLightMatrix(ref cameraData, ref renderingData.cullResults, shadowData,
+                    shadowLightIndex, cascadeIndex, renderTargetWidth, renderTargetHeight, shadowResolution, light.shadowNearPlane,
+                    out m_CascadeSplitDistances[cascadeIndex], out m_CascadeSlices[cascadeIndex], ref cascadeShadowDistance);
+
+                maxShadowDistance = Mathf.Max(maxShadowDistance, cascadeShadowDistance);
                 ref readonly ShadowSliceData sliceData = ref shadowCullingInfos.slices.UnsafeElementAt(cascadeIndex);
                 m_CascadeSplitDistances[cascadeIndex] = sliceData.splitData.cullingSphere;
                 m_CascadeSlices[cascadeIndex] = sliceData;
@@ -168,7 +181,9 @@ namespace UnityEngine.Rendering.Universal.Internal
 
             UpdateTextureDescriptorIfNeeded();
 
-            m_MaxShadowDistanceSq = cameraData.maxShadowDistance * cameraData.maxShadowDistance;
+            maxShadowDistance = Mathf.Min(cameraData.maxShadowDistance, maxShadowDistance);
+
+            m_MaxShadowDistanceSq = maxShadowDistance * maxShadowDistance;
             m_CascadeBorder = shadowData.mainLightShadowCascadeBorder;
             m_CreateEmptyShadowmap = false;
             useNativeRenderPass = true;
@@ -269,6 +284,9 @@ namespace UnityEngine.Rendering.Universal.Internal
 
             for (int i = 0; i < m_CascadeSlices.Length; ++i)
                 m_CascadeSlices[i].Clear();
+
+            for (int i = 0; i < m_MainLightShadowDepthScales.Length; ++i)
+                m_MainLightShadowDepthScales[i] = 0.0f;
         }
 
         void SetEmptyMainLightCascadeShadowmap(RasterCommandBuffer cmd)
@@ -349,6 +367,12 @@ namespace UnityEngine.Rendering.Universal.Internal
             cmd.SetGlobalMatrixArray(MainLightShadowConstantBuffer._WorldToShadow, m_MainLightShadowMatrices);
             cmd.SetGlobalVector(MainLightShadowConstantBuffer._ShadowParams,
                 new Vector4(light.shadowStrength, softShadowsProp, shadowFadeScale, shadowFadeBias));
+
+            // Also set the depth scale of each cascade. This allows to reconstruct the world space distance between caster and receiver
+            for (int i = 0; i < m_MainLightShadowDepthScales.Length; ++i)
+                m_MainLightShadowDepthScales[i] = m_CascadeSlices[i].depthScale;
+
+            cmd.SetGlobalFloatArray("_MainLightShadowDepthScales", m_MainLightShadowDepthScales);
 
             if (m_ShadowCasterCascadesCount > 1)
             {

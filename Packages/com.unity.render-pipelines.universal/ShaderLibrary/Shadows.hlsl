@@ -68,6 +68,7 @@ CBUFFER_START(LightShadows)
 // shadow coord to half3(0, 0, NEAR_PLANE). We use this trick to avoid
 // branching since ComputeCascadeIndex can return cascade index = MAX_SHADOW_CASCADES
 float4x4    _MainLightWorldToShadow[MAX_SHADOW_CASCADES + 1];
+float       _MainLightShadowDepthScales[MAX_SHADOW_CASCADES];
 float4      _CascadeShadowSplitSpheres0;
 float4      _CascadeShadowSplitSpheres1;
 float4      _CascadeShadowSplitSpheres2;
