@@ -480,9 +480,12 @@ Shader "Universal Render Pipeline/Lit"
             Name "MotionVectors"
             Tags { "LightMode" = "MotionVectors" }
 
+            ZWrite[_ZWrite]
+
             HLSLPROGRAM
             #pragma shader_feature_local _ALPHATEST_ON
             #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile _ MOTIONVECTORS_ON
             #pragma multi_compile _ APPLICATION_SPACE_WARP_MOTION
             #pragma shader_feature_local_vertex _ADD_PRECOMPUTED_VELOCITY
 

@@ -1,3 +1,4 @@
+#include <UnityShaderVariables.cginc>
 #ifndef SG_MOTION_VECTORS_PASS_INCLUDED
 #define SG_MOTION_VECTORS_PASS_INCLUDED
 
@@ -30,6 +31,15 @@ PackedMotionVectorPassVaryings PackMotionVectorVaryings(MotionVectorPassVaryings
     packedVaryings.positionCSNoJitter = regularVaryings.positionCSNoJitter.xyw;
     packedVaryings.previousPositionCSNoJitter = regularVaryings.previousPositionCSNoJitter.xyw;
     return packedVaryings;
+}
+
+bool IsIdentity(in float4x4 modelMatrix)
+{
+    return
+        modelMatrix[0][0] == 1.0 && modelMatrix[0][1] == 0.0 && modelMatrix[0][2] == 0.0 && modelMatrix[0][3] == 0.0 &&
+        modelMatrix[1][0] == 0.0 && modelMatrix[1][1] == 1.0 && modelMatrix[1][2] == 0.0 && modelMatrix[1][3] == 0.0 &&
+        modelMatrix[2][0] == 0.0 && modelMatrix[2][1] == 0.0 && modelMatrix[2][2] == 1.0 && modelMatrix[2][3] == 0.0 &&
+        modelMatrix[3][0] == 0.0 && modelMatrix[3][1] == 0.0 && modelMatrix[3][2] == 0.0 && modelMatrix[3][3] == 1.0;
 }
 
 MotionVectorPassVaryings UnpackMotionVectorVaryings(PackedMotionVectorPassVaryings packedVaryings)
@@ -127,7 +137,7 @@ void vert(
     // overwritten by Compute Deform node
     ApplyPreviousFrameDeformedVertexPosition(input.vertexID, previousPositionOS);
 #endif
-        
+
 #if defined (_ADD_PRECOMPUTED_VELOCITY)
         previousPositionOS -= passInput.alembicMotionVectorOS;
 #endif
@@ -150,7 +160,13 @@ void vert(
         mvOutput.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, float4(previousPositionWS, 1.0f));
     #endif
 #else
-        mvOutput.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, mul(UNITY_PREV_MATRIX_M, float4(previousPositionOS, 1.0f)));
+        const float3 prevPositionWS = previousPositionOS;
+        if (!IsIdentity(UNITY_MATRIX_M))
+        {
+            prevPositionWS = mul(UNITY_PREV_MATRIX_M, float4(previousPositionOS, 1.0f)).xyz;
+        }
+
+        mvOutput.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, float4(prevPositionWS, 1.0f));
 #endif
     }
 
